@@ -4,6 +4,33 @@ const { Server } = require('socket.io');
 const path = require('path');
 const { query } = require('./db');
 
+// 自动建表
+async function initDB() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      table_num VARCHAR(10) NOT NULL,
+      total DECIMAL(10,2) NOT NULL,
+      item_count INT NOT NULL,
+      status ENUM('new','preparing','ready','completed') NOT NULL DEFAULT 'new',
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+  await query(`
+    CREATE TABLE IF NOT EXISTS order_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      order_id INT NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      emoji VARCHAR(10) DEFAULT '',
+      price DECIMAL(10,2) NOT NULL,
+      qty INT NOT NULL,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+  console.log('  [数据库] 表已就绪');
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -128,7 +155,8 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3002;
-server.listen(PORT, '0.0.0.0', () => {
+initDB().then(() => {
+  server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('  🥢 寻味 · 点菜系统');
   console.log('  ─────────────────');
@@ -138,4 +166,8 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('  局域网设备请使用你的 IP 地址访问');
   console.log('');
+  });
+}).catch(err => {
+  console.error('数据库初始化失败:', err.message);
+  process.exit(1);
 });
