@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>厨房后台 · 寻味</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .admin-header {
+      background: #111;
+      border-bottom: 2px solid #c0392b;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .admin-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #e74c3c;
+      letter-spacing: 2px;
+    }
+    .admin-stats {
+      display: flex;
+      gap: 20px;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #f0c75e;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #888;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #27ae60;
+    }
+    .connection-status .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #27ae60;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; }
+      50% { opacity:0.3; }
+    }
+
+    /* Main */
+    .admin-main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    /* Order Card */
+    .order-card {
+      background: #222;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #333;
+      transition: all 0.3s;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity:0; transform:translateY(-10px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+    .order-card.new-order {
+      border-color: #e74c3c;
+      box-shadow: 0 0 20px rgba(231,76,60,0.2);
+      animation: highlightPulse 2s ease;
+    }
+    @keyframes highlightPulse {
+      0% { box-shadow: 0 0 30px rgba(231,76,60,0.5); }
+      100% { box-shadow: 0 0 10px rgba(231,76,60,0.1); }
+    }
+
+    .order-card.status-preparing { border-left: 3px solid #f39c12; }
+    .order-card.status-ready { border-left: 3px solid #27ae60; }
+    .order-card.status-completed { border-left: 3px solid #555; opacity:0.6; }
+
+    .order-card-header {
+      padding: 14px 16px;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #333;
+    }
+    .order-card-id {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f0c75e;
+    }
+    .order-card-table {
+      font-size: 13px;
+      background: #333;
+      padding: 4px 10px;
+      border-radius: 10px;
+      color: #ccc;
+    }
+    .order-card-time {
+      font-size: 11px;
+      color: #777;
+    }
+
+    .order-card-body {
+      padding: 12px 16px;
+    }
+    .order-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #2a2a2a;
+      font-size: 14px;
+    }
+    .order-item-row:last-child { border-bottom:none; }
+    .order-item-name { display:flex; align-items:center; gap:8px; }
+    .order-item-emoji { font-size:18px; }
+
+    .order-card-footer {
+      padding: 12px 16px;
+      background: #1a1a1a;
+      border-top: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .order-card-total {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e74c3c;
+    }
+
+    /* Status buttons */
+    .status-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-status {
+      padding: 6px 14px;
+      border: 1px solid #444;
+      border-radius: 16px;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-status:hover { border-color:#f0c75e; color:#f0c75e; }
+    .btn-status.active { background:#f39c12; color:#000; border-color:#f39c12; font-weight:600; }
+    .btn-status.done { background:#27ae60; color:#fff; border-color:#27ae60; font-weight:600; }
+
+    .status-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-badge.new { background:#e74c3c; color:#fff; }
+    .status-badge.preparing { background:#f39c12; color:#000; }
+    .status-badge.ready { background:#27ae60; color:#fff; }
+    .status-badge.completed { background:#555; color:#999; }
+
+    /* Empty state */
+    .empty-orders {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 80px 20px;
+      color: #555;
+    }
+    .empty-orders .icon { font-size:64px; display:block; margin-bottom:16px; }
+    .empty-orders h2 { font-size:20px; margin-bottom:8px; color:#666; }
+
+    /* Sound toggle */
+    .sound-toggle {
+      background: none;
+      border: 1px solid #555;
+      color: #aaa;
+      padding: 4px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .sound-toggle.on { border-color:#27ae60; color:#27ae60; }
+
+    @media (max-width: 768px) {
+      .admin-main { grid-template-columns: 1fr; padding:12px; }
+      .admin-stats { gap:12px; }
+      .stat-value { font-size:18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <span class="admin-title">🔥 厨房后台</span>
+      <span style="font-size:12px;color:#666;margin-left:12px;">寻味点菜系统</span>
+    </div>
+    <div class="admin-stats">
+      <div class="stat-item">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">全部订单</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statPending">0</div>
+        <div class="stat-label" style="color:#e74c3c;">待处理</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statPreparing">0</div>
+        <div class="stat-label" style="color:#f39c12;">制作中</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="sound-toggle on" id="soundToggle" title="新订单提示音">🔔 提示音</button>
+      <div class="connection-status">
+        <span class="dot"></span>
+        <span>实时连接</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main" id="orderBoard">
+    <div class="empty-orders">
+      <span class="icon">🍜</span>
+      <h2>暂无订单</h2>
+      <p>等待顾客下单...</p>
+    </div>
+  </main>
+
+  <audio id="newOrderSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH+Af3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f39/gH9/f4B/f3+Af3+Af39/gH9/f4B/f3+Af39/gH+Af3+Af4B/f3+Af39/gH9/f4B/f3+Af4B/gH9/f4B/f3+Af39/gH9/gH+Af39/gH9/f4B/f3+AgH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+Af39/gH9/f4B/f3+AgH+Af39/gH+Af3+Af39/gH9/f4B/f39/f39/f39/f39/f39/f3+Af39/gH9/f4B/f3+Af39/f39/f39/f39/f39/f39/f39/f3+Af39/gH9/f4B/f3+Af39/f39/gH9/f4B/f3+Af39/gH9/f39/f39/gH9/f4B/f3+Af39/gH9/f3+Af39/f39/f39/f39/f39/f3+Af4B/f3+Af39/gIA=" type="audio/wav">
+  </audio>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let allOrders = [];
+    let soundEnabled = true;
+
+    const board = document.getElementById('orderBoard');
+    const soundToggle = document.getElementById('soundToggle');
+    const newOrderSound = document.getElementById('newOrderSound');
+
+    // 连接后获取全部订单
+    socket.on('connect', () => {
+      socket.emit('get-orders');
+    });
+
+    socket.on('all-orders', (orders) => {
+      allOrders = orders;
+      renderOrders();
+    });
+
+    socket.on('new-order', (order) => {
+      allOrders.unshift(order);
+      renderOrders();
+      if (soundEnabled) {
+        newOrderSound.currentTime = 0;
+        newOrderSound.play().catch(() => {});
+      }
+    });
+
+    socket.on('status-updated', ({ orderId, status }) => {
+      const order = allOrders.find(o => o.id === orderId);
+      if (order) {
+        order.status = status;
+        renderOrders();
+      }
+    });
+
+    function updateStatus(orderId, status) {
+      socket.emit('update-status', { orderId, status });
+    }
+
+    function renderOrders() {
+      if (allOrders.length === 0) {
+        board.innerHTML = `
+          <div class="empty-orders">
+            <span class="icon">🍜</span>
+            <h2>暂无订单</h2>
+            <p>等待顾客下单...</p>
+          </div>`;
+      } else {
+        board.innerHTML = allOrders.map(order => {
+          const statusClass = order.status === 'new' ? 'new-order' : '';
+          const statusText = { new:'待处理', preparing:'制作中', ready:'已出餐', completed:'已完成' }[order.status];
+          return `
+            <div class="order-card status-${order.status} ${statusClass}" id="order-${order.id}">
+              <div class="order-card-header">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span class="order-card-id">#${order.id}</span>
+                  <span class="status-badge ${order.status}">${statusText}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span class="order-card-table">🪑 ${order.table}桌</span>
+                  <span class="order-card-time">${order.createdAt}</span>
+                </div>
+              </div>
+              <div class="order-card-body">
+                ${order.items.map(item => `
+                  <div class="order-item-row">
+                    <span class="order-item-name">
+                      <span class="order-item-emoji">${item.emoji}</span>
+                      ${item.name}
+                    </span>
+                    <span style="color:#999;">×${item.qty} <span style="color:#e74c3c;margin-left:8px;">¥${item.price * item.qty}</span></span>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="order-card-footer">
+                <span class="order-card-total">合计 ¥${order.total}</span>
+                <div class="status-actions">
+                  ${order.status === 'new' ? `<button class="btn-status active" onclick="updateStatus(${order.id},'preparing')">开始制作</button>` : ''}
+                  ${order.status === 'preparing' ? `<button class="btn-status active" onclick="updateStatus(${order.id},'ready')">出餐完成</button>` : ''}
+                  ${order.status === 'ready' ? `<button class="btn-status done" onclick="updateStatus(${order.id},'completed')">✓ 已取餐</button>` : ''}
+                  ${order.status === 'completed' ? `<span style="color:#666;font-size:12px;">此订单已完成</span>` : ''}
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      // 更新统计
+      document.getElementById('statTotal').textContent = allOrders.length;
+      document.getElementById('statPending').textContent = allOrders.filter(o => o.status === 'new').length;
+      document.getElementById('statPreparing').textContent = allOrders.filter(o => o.status === 'preparing').length;
+    }
+
+    // 提示音开关
+    soundToggle.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundToggle.textContent = soundEnabled ? '🔔 提示音' : '🔕 已关闭';
+      soundToggle.className = 'sound-toggle ' + (soundEnabled ? 'on' : '');
+    });
+  </script>
+</body>
+</html>

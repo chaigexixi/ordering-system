@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>寻味 · 点菜系统</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🥢</span>
+        <span class="logo-text">寻味</span>
+      </div>
+      <div class="header-actions">
+        <div class="table-selector">
+          <span class="table-icon">🪑</span>
+          <select id="tableSelect">
+            <option value="A01">A01 桌</option><option value="A02">A02 桌</option><option value="A03">A03 桌</option><option value="A04">A04 桌</option><option value="A05" selected>A05 桌</option><option value="A06">A06 桌</option><option value="A07">A07 桌</option><option value="A08">A08 桌</option>
+            <option value="B01">B01 桌</option><option value="B02">B02 桌</option><option value="B03">B03 桌</option><option value="B04">B04 桌</option><option value="B05">B05 桌</option><option value="B06">B06 桌</option>
+            <option value="C01">C01 桌</option><option value="C02">C02 桌</option><option value="C03">C03 桌</option>
+          </select>
+        </div>
+        <button class="cart-btn" id="cartToggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          <span class="cart-label">购物车</span>
+          <span class="cart-count" id="cartBadge">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 搜索栏 -->
+  <div class="search-bar">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" id="searchInput" placeholder="搜索菜品，比如红烧肉...">
+  </div>
+
+  <!-- 分类导航 -->
+  <nav class="category-nav" id="categoryNav"></nav>
+
+  <main>
+    <!-- 菜单网格 -->
+    <section class="menu-grid" id="menuContainer"></section>
+
+    <!-- 空状态 -->
+    <div class="empty-state" id="emptyState" style="display:none">
+      <span class="empty-icon">🔍</span>
+      <p>没有找到相关菜品</p>
+      <span class="empty-hint">试试其他关键词吧</span>
+    </div>
+  </main>
+
+  <!-- 购物车 -->
+  <aside class="cart-overlay" id="cartOverlay"></aside>
+  <aside class="cart-panel" id="cartPanel">
+    <div class="cart-panel-header">
+      <h2>🛒 购物车</h2>
+      <button class="cart-panel-close" id="cartClose">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="cart-panel-body" id="cartItems">
+      <div class="cart-empty-state">
+        <span class="cart-empty-icon">🍜</span>
+        <p>购物车空空的</p>
+        <span>快去挑选美食吧～</span>
+      </div>
+    </div>
+    <div class="cart-panel-footer" id="cartFooter" style="display:none">
+      <div class="cart-summary">
+        <div class="cart-total-row">
+          <span>合计</span>
+          <strong id="cartTotal">¥0</strong>
+        </div>
+      </div>
+      <button class="btn-checkout" id="btnSubmit">
+        <span>确认下单</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-msg" id="toastMsg"></span>
+  </div>
+
+  <!-- 下单成功弹窗 -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-badge">✨ 下单成功</div>
+      <p class="modal-sub">厨房已收到订单，请耐心等待</p>
+      <div class="modal-receipt" id="modalOrder"></div>
+      <button class="btn-modal-ok" id="btnOk">好的</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

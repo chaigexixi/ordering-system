@@ -1,0 +1,14 @@
+{
+  "name": "ordering-system",
+  "version": "1.0.0",
+  "description": "寻味点菜系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "mysql2": "^3.22.3",
+    "socket.io": "^4.8.0"
+  }
+}
